@@ -3,349 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Finance Pro</title>
+    <title>Finance Pro Calc</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #1c1c1e);
-            --text-color: var(--tg-theme-text-color, #ffffff);
-            --hint-color: var(--tg-theme-hint-color, #9e9e9e);
-            --button-color: var(--tg-theme-button-color, #2ea6ff);
-            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #2c2c2e);
+            --bg: var(--tg-theme-bg-color, #ffffff);
+            --text: var(--tg-theme-text-color, #000000);
+            --hint: var(--tg-theme-hint-color, #999999);
+            --btn: var(--tg-theme-button-color, #2481cc);
+            --btn-text: var(--tg-theme-button-text-color, #ffffff);
+            --sec-bg: var(--tg-theme-secondary-bg-color, #efeff4);
         }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 16px;
-            padding-bottom: 80px;
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; box-sizing: border-box; }
+        .step { display: none; }
+        .step.active { display: block; }
+        h2 { margin-top: 0; color: var(--btn); }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-size: 14px; color: var(--hint); margin-bottom: 8px; }
+        input, select { 
+            width: 100%; padding: 12px; border: 1px solid var(--sec-bg); 
+            background: var(--sec-bg); color: var(--text); border-radius: 8px; 
+            box-sizing: border-box; font-size: 16px; outline: none;
         }
-
-        h2, h3 { margin-top: 0; }
-        .section {
-            background: var(--secondary-bg);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-
-        label { display: block; color: var(--hint-color); font-size: 13px; margin-bottom: 4px; }
-        input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid var(--hint-color);
-            color: var(--text-color);
-            font-size: 16px;
-            padding: 8px 0;
-            margin-bottom: 12px;
-            outline: none;
-            box-sizing: border-box;
-        }
-        input:focus { border-bottom-color: var(--button-color); }
-
-        .row-inputs { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
-        .row-inputs input { margin-bottom: 0; }
-        .day-input { width: 50px; text-align: center; }
-        
-        .btn {
-            background-color: var(--button-color);
-            color: var(--button-text-color);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: 500;
-        }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--button-color);
-            color: var(--button-color);
-            margin-top: 8px;
-        }
-        .btn-remove {
-            background: #ff3b30; width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center;
-        }
-
-        #result { display: none; margin-top: 20px; }
-        .result-card {
-            background: #232323; padding: 15px; border-radius: 10px; border-left: 5px solid var(--button-color);
-        }
-        .big-number { font-size: 24px; font-weight: bold; margin: 10px 0; }
-        .warning { border-left-color: #ffcc00; color: #ffcc00; }
-        .danger { border-left-color: #ff3b30; color: #ff3b30; }
-
-        /* Floating Main Button handled by TG WebApp, but we add a visual one too */
+        .item-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .item-row input:first-child { width: 60px; }
+        .btn-add { background: none; border: 1px dashed var(--btn); color: var(--btn); width: 100%; padding: 8px; border-radius: 8px; cursor: pointer; }
+        .nav-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-next { background: var(--btn); color: var(--btn-text); border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; }
+        .btn-back { background: var(--hint); color: #fff; border: none; padding: 15px; width: 80px; border-radius: 10px; }
+        .summary-card { background: var(--sec-bg); padding: 15px; border-radius: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="app">
-        <div class="section">
-            <h3>📅 Основное</h3>
+<div id="wizard">
+    <!-- Шаг 1: База -->
+    <div class="step active" id="step1">
+        <h2>📅 Период</h2>
+        <div class="input-group">
             <label>Название месяца</label>
-            <input type="text" id="monthName" placeholder="Например: Июнь" value="Текущий">
-            
-            <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
-                    <label>Всего дней</label>
-                    <input type="number" id="daysTotal" value="30">
-                </div>
-                <div style="flex: 1;">
-                    <label>Сегодня (число)</label>
-                    <input type="number" id="currentDay" value="1">
-                </div>
+            <input type="text" id="monthName" value="Январь">
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <div class="input-group">
+                <label>Дней в мес.</label>
+                <input type="number" id="daysTotal" value="31">
             </div>
-
-            <label>💰 Текущий баланс (все деньги)</label>
-            <input type="text" id="balance" placeholder="15 000 или 15к">
+            <div class="input-group">
+                <label>Сегодняшнее число</label>
+                <input type="number" id="currentDay" value="1">
+            </div>
         </div>
+        <button class="btn-next" onclick="nextStep(2)">Далее</button>
+    </div>
 
-        <div class="section">
-            <h3>💸 Доходы и Расходы (будущие)</h3>
-            <p style="font-size: 12px; color: var(--hint-color)">Добавляйте только то, что предстоит до конца месяца.</p>
-            
-            <div id="items-container"></div>
-            
-            <button class="btn btn-outline" onclick="addItem()">+ Добавить запись</button>
+    <!-- Шаг 2: Деньги -->
+    <div class="step" id="step2">
+        <h2>💰 Баланс и Доходы</h2>
+        <div class="input-group">
+            <label>Текущий баланс (на руках)</label>
+            <input type="text" id="balance" placeholder="50000">
         </div>
-
-        <div class="section">
-            <h3>🎯 Цели и Лимиты</h3>
-            <label>Отложить в копилку</label>
-            <input type="text" id="savings" placeholder="0">
-
-            <label>Минимум на еду/проезд (в день)</label>
-            <input type="text" id="ironDaily" placeholder="500">
-        </div>
-
-        <button class="btn" onclick="calculate()">РАССЧИТАТЬ БЮДЖЕТ</button>
-
-        <div id="result" class="section">
-            <h3>📊 Результат</h3>
-            <div id="resultContent" class="result-card"></div>
+        <label>Будущие доходы (Число | Сумма)</label>
+        <div id="incomes-list"></div>
+        <button class="btn-add" onclick="addRow('incomes-list')">+ Добавить доход</button>
+        <div class="nav-btns">
+            <button class="btn-back" onclick="nextStep(1)">←</button>
+            <button class="btn-next" onclick="nextStep(3)">Далее</button>
         </div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+    <!-- Шаг 3: Расходы -->
+    <div class="step" id="step3">
+        <h2>📉 Обязательства</h2>
+        <label>Кредиты и долги (Число | Сумма)</label>
+        <div id="loans-list"></div>
+        <button class="btn-add" onclick="addRow('loans-list')">+ Добавить</button>
+        
+        <label style="margin-top:10px">ЖКХ и Связь</label>
+        <div id="utils-list"></div>
+        <button class="btn-add" onclick="addRow('utils-list')">+ Добавить</button>
 
-        // --- ЛОГИКА ---
+        <label style="margin-top:10px">Покупки / Врачи / ТО</label>
+        <div id="shop-list"></div>
+        <button class="btn-add" onclick="addRow('shop-list')">+ Добавить</button>
 
-        function parseValue(str) {
-            if (!str) return 0.0;
-            str = str.toString().toLowerCase().replace(/\s/g, '');
-            let mult = 1;
-            if (str.includes('k') || str.includes('к')) {
-                mult = 1000;
-                str = str.replace(/[kк]/g, '');
+        <div class="nav-btns">
+            <button class="btn-back" onclick="nextStep(2)">←</button>
+            <button class="btn-next" onclick="nextStep(4)">Далее</button>
+        </div>
+    </div>
+
+    <!-- Шаг 4: Итоги -->
+    <div class="step" id="step4">
+        <h2>🐷 Резервы</h2>
+        <div class="input-group">
+            <label>Отложить в копилку (сумма)</label>
+            <input type="text" id="savings" value="0">
+        </div>
+        <div class="input-group">
+            <label>Минимум на еду в день</label>
+            <input type="text" id="ironDaily" value="500">
+        </div>
+        <div class="nav-btns">
+            <button class="btn-back" onclick="nextStep(3)">←</button>
+            <button class="btn-next" onclick="finish()">РАССЧИТАТЬ БЮДЖЕТ</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    function nextStep(s) {
+        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+        document.getElementById('step' + s).classList.add('active');
+    }
+
+    function addRow(containerId) {
+        const cont = document.getElementById(containerId);
+        const div = document.createElement('div');
+        div.className = 'item-row';
+        div.innerHTML = `<input type="number" placeholder="Дата" class="d"> <input type="text" placeholder="Сумма" class="v">`;
+        cont.appendChild(div);
+    }
+
+    function parseVal(val) {
+        if(!val) return 0;
+        let s = val.toString().toLowerCase().replace(/\s/g, '').replace(',', '.');
+        let m = 1;
+        if(s.includes('k') || s.includes('к')) { m = 1000; s = s.replace(/[kк]/g, ''); }
+        return (parseFloat(s) || 0) * m;
+    }
+
+    function getItems(id) {
+        const rows = document.querySelectorAll(`#${id} .item-row`);
+        return Array.from(rows).map(r => ({
+            day: parseInt(r.querySelector('.d').value),
+            amount: parseVal(r.querySelector('.v').value)
+        })).filter(i => i.day && i.amount);
+    }
+
+    // ЛОГИКА СИМУЛЯЦИИ (КАК В БОТЕ)
+    function simulate(limit, data) {
+        let bal = data.balance;
+        const start = data.currentDay;
+        const end = data.daysTotal;
+        const timeline = {};
+
+        data.all_inc.forEach(i => { if(i.day >= start) { timeline[i.day] = (timeline[i.day]||0) + i.amount; }});
+        data.all_exp.forEach(i => { if(i.day >= start) { timeline[i.day] = (timeline[i.day]||0) - i.amount; }});
+
+        for(let d = start; d <= end; d++) {
+            bal += (timeline[d] || 0);
+            bal -= (data.ironDaily + limit);
+            if(d === end) bal -= data.savings;
+            if(bal < -100) return false;
+        }
+        return true;
+    }
+
+    function finish() {
+        const data = {
+            month: document.getElementById('monthName').value,
+            daysTotal: parseInt(document.getElementById('daysTotal').value),
+            currentDay: parseInt(document.getElementById('currentDay').value),
+            balance: parseVal(document.getElementById('balance').value),
+            ironDaily: parseVal(document.getElementById('ironDaily').value),
+            savings: parseVal(document.getElementById('savings').value),
+            all_inc: getItems('incomes-list'),
+            all_exp: [...getItems('loans-list'), ...getItems('utils-list'), ...getItems('shop-list')],
+            sums: {
+                loans: getItems('loans-list').reduce((a,b)=>a+b.amount,0),
+                utils: getItems('utils-list').reduce((a,b)=>a+b.amount,0),
+                shop: getItems('shop-list').reduce((a,b)=>a+b.amount,0)
             }
-            str = str.replace(',', '.');
-            const val = parseFloat(str);
-            return isNaN(val) ? 0.0 : val * mult;
-        }
+        };
 
-        function formatCurrency(num) {
-            return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(num);
-        }
+        const daysLeft = data.daysTotal - data.currentDay + 1;
+        const totalInc = data.balance + data.all_inc.reduce((a,b)=>a+b.amount,0);
+        const totalExp = data.all_exp.reduce((a,b)=>a+b.amount,0) + data.savings;
+        const ironNeeded = data.ironDaily * daysLeft;
+        const freePool = totalInc - totalExp - ironNeeded;
 
-        // Управление списком
-        function addItem() {
-            const container = document.getElementById('items-container');
-            const div = document.createElement('div');
-            div.className = 'row-inputs';
-            div.innerHTML = `
-                <input type="number" class="day-input" placeholder="Дн">
-                <input type="text" class="amount-input" placeholder="Сумма (например: -5к или 10к)">
-                <button class="btn btn-remove" onclick="this.parentElement.remove()">×</button>
-            `;
-            container.appendChild(div);
-        }
-        // Добавим пару полей по умолчанию
-        addItem(); addItem();
+        let safeLimit = 0;
+        let cashGap = false;
 
-        function getItems() {
-            const items = [];
-            document.querySelectorAll('.row-inputs').forEach(row => {
-                const d = parseInt(row.querySelector('.day-input').value);
-                const amtStr = row.querySelector('.amount-input').value;
-                
-                // Определяем знак (расход или доход)
-                // Если пользователь не ввел минус, но это расход, логика сложнее. 
-                // Упростим: пусть вводит с минусом для расхода, с плюсом для дохода.
-                // Либо сделаем селект. Для простоты сейчас: "Все положительные числа считаем расходами, если не выбран тип".
-                // В оригинальном боте были категории. Сделаем здесь проще: 
-                // Просто список. Если сумма отрицательная (ввел -5000) - это расход. 
-                // Но лучше добавим Select, чтобы не путать.
-                
-                // ПЕРЕДЕЛЫВАЕМ addItem для селекта:
-            });
-            return items;
-        }
-
-        // Переопределим addItem для удобства (Доход/Расход)
-        document.getElementById('items-container').innerHTML = ''; // Clear
-        function addItemImproved(type = 'expense') {
-            const container = document.getElementById('items-container');
-            const div = document.createElement('div');
-            div.className = 'row-inputs';
-            const isInc = type === 'income';
-            div.innerHTML = `
-                <select class="type-select" style="width: 40px; border:none; background:transparent; color:white;">
-                    <option value="exp" ${!isInc?'selected':''}>📉</option>
-                    <option value="inc" ${isInc?'selected':''}>📈</option>
-                </select>
-                <input type="number" class="day-input" placeholder="Число">
-                <input type="text" class="amount-input" placeholder="Сумма (10к)">
-                <button class="btn btn-remove" onclick="this.parentElement.remove()">×</button>
-            `;
-            container.appendChild(div);
-        }
-        // Заменим кнопку на две
-        const btnContainer = document.querySelector('.btn-outline').parentElement;
-        btnContainer.innerHTML = `
-            <div id="items-container"></div>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button class="btn btn-outline" onclick="addItemImproved('expense')" style="flex:1; border-color:#ff3b30; color:#ff3b30">Add Расход</button>
-                <button class="btn btn-outline" onclick="addItemImproved('income')" style="flex:1; border-color:#34c759; color:#34c759">Add Доход</button>
-            </div>
-        `;
-        // Инит
-        addItemImproved('expense');
-
-        // Ядро расчета (Симуляция)
-        function simulateCashflow(testDailyLimit, data) {
-            let balance = data.balance;
-            const startD = data.currentDay;
-            const endD = data.daysTotal;
-            const timeline = {};
-
-            // Заполняем timeline
-            data.items.forEach(item => {
-                if (item.day >= startD) {
-                    if (!timeline[item.day]) timeline[item.day] = { inc: 0, exp: 0 };
-                    if (item.type === 'inc') timeline[item.day].inc += item.amount;
-                    else timeline[item.day].exp += item.amount;
-                }
-            });
-
-            // Копилка (списание в последний день)
-            if (!timeline[endD]) timeline[endD] = { inc: 0, exp: 0 };
-            timeline[endD].exp += data.savings;
-
-            let currentSimBalance = balance;
-
-            for (let day = startD; day <= endD; day++) {
-                const ops = timeline[day] || { inc: 0, exp: 0 };
-                currentSimBalance += ops.inc;
-                currentSimBalance -= ops.exp;
-                
-                // Вычитаем лимит (железный + тестируемый)
-                currentSimBalance -= (data.ironDaily + testDailyLimit);
-
-                if (currentSimBalance < -50) return false; // Кассовый разрыв
+        if(freePool > 0) {
+            let low = 0, high = (freePool / daysLeft) * 1.2;
+            for(let i=0; i<20; i++) {
+                let mid = (low + high) / 2;
+                if(simulate(mid, data)) { safeLimit = mid; low = mid; } 
+                else { high = mid; }
             }
-            return true;
+            if(safeLimit < (freePool/daysLeft)*0.9) cashGap = true;
+        } else {
+            safeLimit = -1;
         }
 
-        function calculate() {
-            // Сбор данных
-            const currentDay = parseInt(document.getElementById('currentDay').value) || 1;
-            const daysTotal = parseInt(document.getElementById('daysTotal').value) || 30;
-            const balance = parseValue(document.getElementById('balance').value);
-            const savings = parseValue(document.getElementById('savings').value);
-            const ironDaily = parseValue(document.getElementById('ironDaily').value);
-            
-            const items = [];
-            document.querySelectorAll('.row-inputs').forEach(row => {
-                const type = row.querySelector('.type-select').value;
-                const day = parseInt(row.querySelector('.day-input').value);
-                const amount = parseValue(row.querySelector('.amount-input').value);
-                if (day && amount) items.push({ type, day, amount });
-            });
-
-            const data = { balance, currentDay, daysTotal, items, savings, ironDaily };
-            const daysLeft = daysTotal - currentDay + 1;
-
-            // Расчет (Бинарный поиск)
-            // Сначала посчитаем общий пул
-            let futureInc = items.filter(i => i.type === 'inc' && i.day >= currentDay).reduce((a,b)=>a+b.amount,0);
-            let futureExp = items.filter(i => i.type === 'exp' && i.day >= currentDay).reduce((a,b)=>a+b.amount,0);
-            
-            let totalResources = balance + futureInc;
-            let totalObligations = futureExp + savings;
-            let totalIronNeeded = ironDaily * daysLeft;
-            
-            let freePool = totalResources - totalObligations - totalIronNeeded;
-            
-            let safeLimit = 0;
-            let cashGap = false;
-
-            if (freePool > 0) {
-                let theoretical = freePool / daysLeft;
-                let low = 0, high = theoretical * 1.5;
-                
-                for(let i=0; i<20; i++) {
-                    let mid = (low + high) / 2;
-                    if (simulateCashflow(mid, data)) {
-                        safeLimit = mid;
-                        low = mid;
-                    } else {
-                        high = mid;
-                    }
-                }
-                
-                if (safeLimit < (theoretical * 0.95)) cashGap = true;
-            } else {
-                safeLimit = -1;
-            }
-
-            // Вывод
-            const resDiv = document.getElementById('result');
-            const content = document.getElementById('resultContent');
-            resDiv.style.display = 'block';
-            
-            let html = `<div>Осталось дней: <b>${daysLeft}</b></div>`;
-            
-            if (safeLimit < 0) {
-                content.className = 'result-card danger';
-                html += `<div class="big-number">ДЕФИЦИТ: ${formatCurrency(Math.abs(freePool))}</div>`;
-                html += `<div>Вам нужно найти деньги или урезать расходы!</div>`;
-            } else {
-                content.className = cashGap ? 'result-card warning' : 'result-card';
-                html += `<div>Тратить в день (на хотелки):</div>`;
-                html += `<div class="big-number" style="color: #34c759">${formatCurrency(safeLimit)}</div>`;
-                html += `<div>+ ${formatCurrency(ironDaily)} (на еду)</div>`;
-                html += `<hr style="border-color:#555">`;
-                html += `<div>ИТОГО В ДЕНЬ: <b>${formatCurrency(safeLimit + ironDaily)}</b></div>`;
-                
-                if (cashGap) {
-                    html += `<br><small>⚠️ <b>ВНИМАНИЕ:</b> Лимит занижен из-за кассового разрыва (крупные траты раньше поступлений).</small>`;
-                }
-            }
-
-            content.innerHTML = html;
-            
-            // Кнопка "Сохранить в боте"
-            tg.MainButton.text = "Сохранить в историю";
-            tg.MainButton.show();
-            tg.MainButton.onClick(() => {
-                const reportData = {
-                    month: document.getElementById('monthName').value,
-                    total_inc: totalResources,
-                    total_exp: totalObligations,
-                    safe_limit: safeLimit
-                };
-                tg.sendData(JSON.stringify(reportData));
-            });
-        }
-
-    </script>
+        // Отправка данных в бота
+        const result = {
+            ...data,
+            safeLimit,
+            cashGap,
+            daysLeft,
+            totalInc,
+            totalExp,
+            ironNeeded
+        };
+        tg.sendData(JSON.stringify(result));
+    }
+</script>
 </body>
 </html>
